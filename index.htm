@@ -409,7 +409,12 @@
                 e.preventDefault();
                 e.stopPropagation();
 
-                // 1) Desktop / Mobile — Fullscreen API disponível
+                // 1) Em navegador VR (Wolvic/Pico): priorizar modo imersivo VR (WebXR), não fullscreen 2D
+                if (isVRBrowser() && navigator.xr) {
+                    if (tryWebXR()) return;
+                }
+
+                // 2) Desktop / Mobile (não VR): Fullscreen API
                 if (fsEnabled) {
                     if (!getFullscreenElement()) {
                         enterFullscreen();
@@ -419,13 +424,7 @@
                     return;
                 }
 
-                // 2) Navegador VR com WebXR
-                if (navigator.xr) {
-                    if (tryWebXR()) return;
-                }
-
-                // 3) Navegador VR sem WebXR (Wolvic fallback)
-                // 4) Qualquer outro navegador sem fullscreen
+                // 4) Fallback: toggle UI limpa
                 toggleUI();
             }
 
