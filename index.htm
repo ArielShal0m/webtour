@@ -12,6 +12,8 @@
     <script src="lib/tdvplayer.js?v=1772500851990"></script>
     <link rel="preload" href="locale/pt.txt?v=1772500851990" as="fetch" crossorigin="anonymous" />
     <link rel="preload" href="script.js?v=1772500851990" as="script" />
+    <!-- Preload para script_general.js reduz aviso de "preload not used" (player usa depois) -->
+    <link rel="preload" href="script_general.js?v=1772500851990" as="script" />
     <link rel="preload" href="media/panorama_8B7F0EA3_8704_03DC_41BD_8BEDCF4DB6CC_0/r/3/0_0.webp?v=1772500851990"
         as="image" />
     <link rel="preload" href="media/panorama_8B7F0EA3_8704_03DC_41BD_8BEDCF4DB6CC_0/l/3/0_0.webp?v=1772500851990"
@@ -162,6 +164,70 @@
             pointer-events: none !important;
             transition: opacity 0.3s ease;
         }
+
+        /* Root do DOM Overlay WebXR – visível só dentro da sessão VR */
+        #xr-overlay-root {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            visibility: hidden;
+            z-index: 2147483647;
+        }
+
+        #xr-overlay-root.active {
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        #xr-overlay-root .xr-exit-btn {
+            position: absolute;
+            bottom: 28px;
+            right: 28px;
+            width: 72px;
+            height: 72px;
+            min-width: 72px;
+            min-height: 72px;
+            border: 3px solid rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.75);
+            color: #fff;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            pointer-events: auto;
+            touch-action: manipulation;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
+        }
+
+        #xr-overlay-root .xr-exit-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Dica em 2D para sair do VR quando não houver DOM Overlay (ex.: Wolvic) */
+        .vr-exit-hint {
+            position: fixed;
+            bottom: 92px;
+            right: 24px;
+            z-index: 2147483646;
+            max-width: 200px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.75);
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 12px;
+            line-height: 1.3;
+            pointer-events: none;
+            visibility: hidden;
+        }
+
+        html.is-vr .vr-exit-hint {
+            visibility: visible;
+        }
     </style>
 
 </head>
@@ -185,6 +251,16 @@
         </div>
     </div>
     <div id="viewer" class="fill-viewport"></div>
+
+    <!-- Root para WebXR DOM Overlay (botão visível no VR estereoscópico) -->
+    <div id="xr-overlay-root">
+        <button type="button" class="xr-exit-btn" id="xrExitBtn" aria-label="Sair do VR">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M9 1v8H1v2h9a1 1 0 001-1V1H9zm6 0v9a1 1 0 001 1h8v-2h-7V1h-2zM1 14h8v8h2v-9a1 1 0 00-1-1H1v2zm14-1v9h2v-8h7v-2h-8a1 1 0 00-1 1z"/></svg>
+            <span>Sair VR</span>
+        </button>
+    </div>
+
+    <p class="vr-exit-hint" id="vrExitHint" aria-hidden="true">Para sair do VR use o botão voltar do controle.</p>
 
     <!-- Botão Tela Cheia / Modo Imersivo -->
     <button id="fullscreenBtn" title="Tela Cheia" aria-label="Alternar tela cheia">
@@ -293,30 +369,45 @@
             }
 
             // =============================================
-            // WEBXR (SESSÃO IMERSIVA VR)
+            // WEBXR (SESSÃO IMERSIVA VR) + DOM OVERLAY
             // =============================================
             var xrSession = null;
+            var xrOverlayRoot = document.getElementById('xr-overlay-root');
+            var xrExitBtn = document.getElementById('xrExitBtn');
+
+            function onXRSessionEnded() {
+                xrSession = null;
+                btn.classList.remove('is-active');
+                if (xrOverlayRoot) xrOverlayRoot.classList.remove('active');
+            }
 
             function tryWebXR() {
                 if (!navigator.xr) return false;
 
                 navigator.xr.isSessionSupported('immersive-vr').then(function (supported) {
                     if (supported && !xrSession) {
-                        navigator.xr.requestSession('immersive-vr').then(function (session) {
+                        var options = { optionalFeatures: ['dom-overlay'] };
+                        if (xrOverlayRoot) options.domOverlay = { root: xrOverlayRoot };
+
+                        navigator.xr.requestSession('immersive-vr', options).then(function (session) {
                             xrSession = session;
                             btn.classList.add('is-active');
-                            session.addEventListener('end', function () {
-                                xrSession = null;
-                                btn.classList.remove('is-active');
-                            });
+                            if (xrOverlayRoot) xrOverlayRoot.classList.add('active');
+
+                            if (xrExitBtn) {
+                                xrExitBtn.onclick = function () {
+                                    if (xrSession) xrSession.end();
+                                };
+                            }
+
+                            session.addEventListener('end', onXRSessionEnded);
                         }).catch(function () {
-                            // WebXR falhou, usa toggleUI como fallback
+                            onXRSessionEnded();
                             toggleUI();
                         });
                     } else if (xrSession) {
                         xrSession.end();
                     } else {
-                        // immersive-vr não suportado, usa toggleUI
                         toggleUI();
                     }
                 }).catch(function () {
