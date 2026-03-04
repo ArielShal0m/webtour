@@ -73,7 +73,7 @@
             -o-transition: opacity 0.5s;
         }
 
-        /* Botão Tela Cheia - compatível com VR */
+        /* Botão Tela Cheia / Modo Imersivo */
         #fullscreenBtn {
             position: fixed;
             bottom: 24px;
@@ -91,6 +91,7 @@
             -webkit-tap-highlight-color: transparent;
             touch-action: manipulation;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            transition: opacity 0.3s ease, transform 0.2s ease;
         }
 
         #fullscreenBtn svg {
@@ -100,19 +101,21 @@
             pointer-events: none;
         }
 
+        /* Estado: normal (entrar) */
         #fullscreenBtn .icon-exit {
             display: none;
         }
 
-        #fullscreenBtn.is-fullscreen .icon-enter {
+        /* Estado: ativo (sair) */
+        #fullscreenBtn.is-active .icon-enter {
             display: none;
         }
 
-        #fullscreenBtn.is-fullscreen .icon-exit {
+        #fullscreenBtn.is-active .icon-exit {
             display: block;
         }
 
-        /* Hover apenas em dispositivos que suportam (não VR) */
+        /* Hover apenas em dispositivos que suportam */
         @media (hover: hover) {
             #fullscreenBtn:hover {
                 background-color: rgba(0, 0, 0, 0.8);
@@ -126,9 +129,13 @@
             background-color: rgba(0, 0, 0, 0.85);
         }
 
-        /* Esconde botão se fullscreen não for suportado */
-        #fullscreenBtn.fs-unsupported {
-            display: none;
+        /* Modo UI limpa - esconde elementos de interface */
+        body.clean-ui #preloadContainer,
+        body.clean-ui .tdv-hotspot-label,
+        body.clean-ui .tdv-container>div:not(#viewer):not(#fullscreenBtn) {
+            opacity: 0 !important;
+            pointer-events: none !important;
+            transition: opacity 0.3s ease;
         }
     </style>
 
@@ -154,13 +161,13 @@
     </div>
     <div id="viewer" class="fill-viewport"></div>
 
-    <!-- Botão Tela Cheia -->
+    <!-- Botão Tela Cheia / Modo Imersivo -->
     <button id="fullscreenBtn" title="Tela Cheia" aria-label="Alternar tela cheia">
-        <!-- Ícone Entrar em Tela Cheia -->
+        <!-- Ícone Entrar -->
         <svg class="icon-enter" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path d="M3 3h7V1H1v9h2V3zm11-2v2h7v7h2V1h-9zM3 14H1v9h9v-2H3v-7zm18 0h-2v7h-7v2h9v-9z" />
         </svg>
-        <!-- Ícone Sair da Tela Cheia -->
+        <!-- Ícone Sair -->
         <svg class="icon-exit" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path
                 d="M9 1v8H1v2h9a1 1 0 001-1V1H9zm6 0v9a1 1 0 001 1h8v-2h-7V1h-2zM1 14h8v8h2v-9a1 1 0 00-1-1H1v2zm14-1v9h2v-8h7v-2h-8a1 1 0 00-1 1z" />
@@ -171,18 +178,27 @@
         (function () {
             var btn = document.getElementById('fullscreenBtn');
             var docEl = document.documentElement;
+            var isCleanUI = false;
 
-            // Detecta suporte a fullscreen
-            var fsEnabled = document.fullscreenEnabled
-                || document.webkitFullscreenEnabled
-                || document.mozFullScreenEnabled
-                || document.msFullscreenEnabled;
-
-            // Se fullscreen não é suportado (ex: Wolvic VR), esconde o botão
-            if (!fsEnabled) {
-                btn.classList.add('fs-unsupported');
-                return;
+            // =============================================
+            // DETECÇÃO DE NAVEGADOR VR
+            // =============================================
+            function isVRBrowser() {
+                return !!(
+                    navigator.xr ||
+                    /VR|Oculus|Quest|Pico|Wolvic/i.test(navigator.userAgent)
+                );
             }
+
+            // =============================================
+            // SUPORTE A FULLSCREEN
+            // =============================================
+            var fsEnabled = !!(
+                document.fullscreenEnabled ||
+                document.webkitFullscreenEnabled ||
+                document.mozFullScreenEnabled ||
+                document.msFullscreenEnabled
+            );
 
             function getFullscreenElement() {
                 return document.fullscreenElement
@@ -205,32 +221,106 @@
                 else if (document.msExitFullscreen) document.msExitFullscreen();
             }
 
-            btn.addEventListener('click', function (e) {
+            // =============================================
+            // TOGGLE UI LIMPA (FALLBACK VR)
+            // =============================================
+            function toggleUI() {
+                isCleanUI = !isCleanUI;
+                document.body.classList.toggle('clean-ui', isCleanUI);
+                btn.classList.toggle('is-active', isCleanUI);
+            }
+
+            // =============================================
+            // WEBXR (SESSÃO IMERSIVA VR)
+            // =============================================
+            var xrSession = null;
+
+            function tryWebXR() {
+                if (!navigator.xr) return false;
+
+                navigator.xr.isSessionSupported('immersive-vr').then(function (supported) {
+                    if (supported && !xrSession) {
+                        navigator.xr.requestSession('immersive-vr').then(function (session) {
+                            xrSession = session;
+                            btn.classList.add('is-active');
+                            session.addEventListener('end', function () {
+                                xrSession = null;
+                                btn.classList.remove('is-active');
+                            });
+                        }).catch(function () {
+                            // WebXR falhou, usa toggleUI como fallback
+                            toggleUI();
+                        });
+                    } else if (xrSession) {
+                        xrSession.end();
+                    } else {
+                        // immersive-vr não suportado, usa toggleUI
+                        toggleUI();
+                    }
+                }).catch(function () {
+                    toggleUI();
+                });
+
+                return true;
+            }
+
+            // =============================================
+            // LÓGICA PRINCIPAL DO BOTÃO
+            // =============================================
+            function handleClick(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                if (!getFullscreenElement()) {
-                    enterFullscreen();
-                } else {
-                    exitFullscreen();
-                }
-            });
 
-            // Eventos touch para melhor responsividade em VR
+                // 1) Desktop / Mobile — Fullscreen API disponível
+                if (fsEnabled) {
+                    if (!getFullscreenElement()) {
+                        enterFullscreen();
+                    } else {
+                        exitFullscreen();
+                    }
+                    return;
+                }
+
+                // 2) Navegador VR com WebXR
+                if (navigator.xr) {
+                    if (tryWebXR()) return;
+                }
+
+                // 3) Navegador VR sem WebXR (Wolvic fallback)
+                // 4) Qualquer outro navegador sem fullscreen
+                toggleUI();
+            }
+
+            // Click handler
+            btn.addEventListener('click', handleClick);
+
+            // Touch handler para melhor responsividade em VR
+            var touchHandled = false;
             btn.addEventListener('touchend', function (e) {
                 e.preventDefault();
                 e.stopPropagation();
-                if (!getFullscreenElement()) {
-                    enterFullscreen();
-                } else {
-                    exitFullscreen();
-                }
+                touchHandled = true;
+                handleClick(e);
+                // Previne o click duplicado
+                setTimeout(function () { touchHandled = false; }, 300);
             }, { passive: false });
 
+            // Previne click duplicado após touch
+            btn.addEventListener('click', function (e) {
+                if (touchHandled) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            }, true);
+
+            // =============================================
+            // FULLSCREEN CHANGE LISTENER
+            // =============================================
             function onFSChange() {
                 if (getFullscreenElement()) {
-                    btn.classList.add('is-fullscreen');
+                    btn.classList.add('is-active');
                 } else {
-                    btn.classList.remove('is-fullscreen');
+                    btn.classList.remove('is-active');
                 }
             }
 
@@ -238,6 +328,14 @@
             document.addEventListener('webkitfullscreenchange', onFSChange);
             document.addEventListener('mozfullscreenchange', onFSChange);
             document.addEventListener('MSFullscreenChange', onFSChange);
+
+            // =============================================
+            // NUNCA ESCONDER O BOTÃO
+            // O botão SEMPRE fica visível em qualquer navegador.
+            // Em VR ele age como toggle de UI limpa.
+            // Em desktop/mobile ele age como fullscreen.
+            // =============================================
+
         })();
     </script>
 </body>
