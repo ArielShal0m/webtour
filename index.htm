@@ -62,7 +62,6 @@
         }
 
         #viewer {
-            position: relative;
             z-index: 1;
         }
 
@@ -104,11 +103,6 @@
             -webkit-transform: translateZ(9999px);
             will-change: transform;
             pointer-events: auto !important;
-        }
-
-        /* Em navegadores VR, usamos o botão dentro do #viewer e evitamos position: fixed */
-        html.is-vr #fullscreenBtn {
-            position: absolute;
         }
 
         #fullscreenBtn svg {
@@ -280,16 +274,6 @@
             var btn = document.getElementById('fullscreenBtn');
             var docEl = document.documentElement;
             var isCleanUI = false;
-            var viewer = document.getElementById('viewer');
-
-            // Move o botão para dentro do #viewer em navegadores VR
-            function moveBtnIntoViewerForVR() {
-                if (!btn || !viewer) return;
-                if (btn.parentElement !== viewer) {
-                    viewer.appendChild(btn);
-                }
-                document.documentElement.classList.add('is-vr');
-            }
 
             // =============================================
             // DETECÇÃO DE NAVEGADOR VR / WOLVIC (PICO)
@@ -305,8 +289,9 @@
                 return /Wolvic|Pico.*Browser/i.test(navigator.userAgent);
             }
 
+            // Marca html para dica "Sair VR" (botão fica fora do #viewer para não quebrar o 3DVista)
             if (isVRBrowser()) {
-                moveBtnIntoViewerForVR();
+                document.documentElement.classList.add('is-vr');
             }
 
             // Garantir que o botão fique visível no Wolvic/Pico (por cima do canvas)
