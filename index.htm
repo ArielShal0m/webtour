@@ -366,6 +366,14 @@
                 if (xrOverlayRoot) xrOverlayRoot.classList.remove('active');
             }
 
+            function fallbackFullscreenOrUI() {
+                if (fsEnabled && !getFullscreenElement()) {
+                    enterFullscreen();
+                } else {
+                    toggleUI();
+                }
+            }
+
             function tryWebXR() {
                 if (!navigator.xr) return false;
 
@@ -388,15 +396,15 @@
                             session.addEventListener('end', onXRSessionEnded);
                         }).catch(function () {
                             onXRSessionEnded();
-                            toggleUI();
+                            fallbackFullscreenOrUI();
                         });
                     } else if (xrSession) {
                         xrSession.end();
                     } else {
-                        toggleUI();
+                        fallbackFullscreenOrUI();
                     }
                 }).catch(function () {
-                    toggleUI();
+                    fallbackFullscreenOrUI();
                 });
 
                 return true;
