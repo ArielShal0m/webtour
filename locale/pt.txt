@@ -1,0 +1,70 @@
+#: locale=pt
+
+## E-Learning
+
+### Answer
+questionOption_A4636DC9_B10D_275D_41D8_12A9091EA4FA.text = 1
+questionOption_A43190DF_B10D_3D76_41CE_5CC13073F2DB.text = 11
+questionOption_A46DA298_B10D_5DFB_41AE_6CA6200C388B.text = 2
+questionOption_A4172707_B10D_24D6_41E1_EE68392AD6D5.text = 4
+
+### Question
+question_A5EA30D3_B10D_DD4D_41D8_0A128F3F6CB6.title = 1+1=?
+
+### Question Screen
+quizQuestion_A720F459_B10D_257D_41B8_C932534FDA1B.ok = OK
+
+### Report Screen
+quizScore_A7267459_B10D_257D_41DD_862282AC150C.title = - SCORE -
+quizScore_A7267459_B10D_257D_41DD_862282AC150C.completion = Completed
+quizScore_A7267459_B10D_257D_41DD_862282AC150C.questionsCorrect = Correct
+quizScore_A7267459_B10D_257D_41DD_862282AC150C.downloadCSV = Download .csv
+quizScore_A7267459_B10D_257D_41DD_862282AC150C.questionsIncorrect = Incorrect
+quizScore_A7267459_B10D_257D_41DD_862282AC150C.items = Items Found
+quizScore_A7267459_B10D_257D_41DD_862282AC150C.questions = Questions
+quizScore_A7267459_B10D_257D_41DD_862282AC150C.repeat = Repeat
+quizScore_A7267459_B10D_257D_41DD_862282AC150C.submitToLMS = Submit
+quizScore_A7267459_B10D_257D_41DD_862282AC150C.elapsedTime = Time
+
+### Score Name
+score1.label = Score 1
+
+### Timeout Screen
+quizTimeout_A720C459_B10D_257D_41C2_42CAF4A87585.title = - TIMEOUT -
+quizTimeout_A720C459_B10D_257D_41C2_42CAF4A87585.repeat = Repeat
+quizTimeout_A720C459_B10D_257D_41C2_42CAF4A87585.score = View Score
+
+## Hotspot
+
+### URL
+overlay_A0F5F184_B0F7_5FCA_41E3_9FE81AA15347.url = https://www.testedeqi.org/
+
+## Media
+
+### Title
+album_A5A491EE_B10F_7F56_41CB_90185EA197C7_0.label = Captura de tela 2026-03-01 001736
+album_A5A491EE_B10F_7F56_41CB_90185EA197C7.label = Photo Album Captura de tela 2026-03-01 001736
+video_A07DA9A9_B11F_6FDD_41E2_159CC766788D.label = Robô_Voando_com_Fundo_Transparente
+panorama_8B7F0EA3_8704_03DC_41BD_8BEDCF4DB6CC.label = allphoto-bangkok-imSqK_PD5R0-unsplash
+panorama_8DB246EA_8704_032C_41D3_6C8288ECDC4A.label = kris-guico-rsB-he-ye7w-unsplash
+video_A3A16139_B114_FF3A_41B8_2EB70AAF6275.label = robot waving  green screen (robô acenando, fundo verde) - DaniQuibit (1080p, h264, youtube)
+panorama_8DB68D1E_8704_06E4_41B9_632F73E5598B.label = timothy-oldfield-luufnHoChRU-unsplash
+
+### Video
+videolevel_A1AC4FA4_B10D_23CA_41E2_718B258B8D30.posterURL = media/video_A07DA9A9_B11F_6FDD_41E2_159CC766788D_poster_pt.jpg
+videolevel_A860E546_B11D_E756_41E1_C1863D4592D9.posterURL = media/video_A07DA9A9_B11F_6FDD_41E2_159CC766788D_poster_pt.jpg
+videolevel_A860E546_B11D_E756_41E1_C1863D4592D9.url = media/video_A07DA9A9_B11F_6FDD_41E2_159CC766788D_pt.m3u8
+videolevel_A1AC4FA4_B10D_23CA_41E2_718B258B8D30.url = media/video_A07DA9A9_B11F_6FDD_41E2_159CC766788D_pt.mp4
+videolevel_A0E24488_B10D_25DB_41AB_D2C8860C7DD0.posterURL = media/video_A3A16139_B114_FF3A_41B8_2EB70AAF6275_poster_pt.jpg
+videolevel_A675AD84_B175_E7CA_41D5_D277ABA94CEA.posterURL = media/video_A3A16139_B114_FF3A_41B8_2EB70AAF6275_poster_pt.jpg
+videolevel_A0E24488_B10D_25DB_41AB_D2C8860C7DD0.url = media/video_A3A16139_B114_FF3A_41B8_2EB70AAF6275_pt.mp4
+videolevel_A675AD84_B175_E7CA_41D5_D277ABA94CEA.url = media/video_A3A16139_B114_FF3A_41B8_2EB70AAF6275_pt_pico.mp4
+
+### Video Subtitles
+
+## Tour
+
+### Description
+
+### Title
+tour.name = Sem Título 1
