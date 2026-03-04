@@ -26,11 +26,95 @@
 		.fill-viewport.landscape-right { right: env(safe-area-inset-right); }
         #viewer { z-index:1; }
         #preloadContainer { z-index:2; opacity:0; background-color:rgba(255,255,255,1); transition: opacity 0.5s; -webkit-transition: opacity 0.5s; -moz-transition: opacity 0.5s; -o-transition: opacity 0.5s;}
+
+        /* Botão Tela Cheia */
+        #fullscreenBtn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+            width: 48px;
+            height: 48px;
+            border: none;
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        #fullscreenBtn:hover {
+            background: rgba(0, 0, 0, 0.75);
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+        #fullscreenBtn:active {
+            transform: scale(0.95);
+        }
+        #fullscreenBtn svg {
+            width: 24px;
+            height: 24px;
+            fill: #ffffff;
+            transition: opacity 0.2s ease;
+        }
+        #fullscreenBtn .icon-exit { display: none; }
+        #fullscreenBtn.is-fullscreen .icon-enter { display: none; }
+        #fullscreenBtn.is-fullscreen .icon-exit { display: block; }
     </style>
     
 </head>
 <body>
     <div id="preloadContainer" class="fill-viewport"><div style="z-index: 4; position: absolute; overflow: hidden; left: 0%; top: 50%; width: 100.00%; height: 10.00%" ><div style="text-align:left; color:#000; "><DIV STYLE="text-align:center;font-size:1.6666666666666663vmin;"><SPAN STYLE="display:inline-block; letter-spacing:0vmin; white-space:pre-wrap;color:#777777;font-size:1.67vmin;font-family:Arial, Helvetica, sans-serif;">Loading virtual tour. Please wait...</SPAN></DIV><DIV STYLE="text-align:center;font-size:1.6666666666666663vmin;"><SPAN STYLE="display:inline-block; letter-spacing:0vmin; white-space:pre-wrap;color:#777777;font-size:1.67vmin;font-family:Arial, Helvetica, sans-serif;">created with the trial of 3DVista VT Pro</SPAN></DIV><DIV STYLE="text-align:center;font-size:1.4814814814814814vmin;"><A TARGET="_blank" HREF="https://www.3dvista.com" STYLE="text-decoration:none; color:inherit;"><SPAN STYLE="display:inline-block; letter-spacing:0vmin; white-space:pre-wrap;color:#999999;font-size:1.48vmin;font-family:Arial, Helvetica, sans-serif;"><U>www.3DVista.com</U></SPAN></A></DIV></div></div></div>
     <div id="viewer" class="fill-viewport"></div>
+
+    <!-- Botão Tela Cheia -->
+    <button id="fullscreenBtn" title="Tela Cheia">
+        <!-- Ícone Entrar em Tela Cheia -->
+        <svg class="icon-enter" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 3h7V1H1v9h2V3zm11-2v2h7v7h2V1h-9zM3 14H1v9h9v-2H3v-7zm18 0h-2v7h-7v2h9v-9z"/>
+        </svg>
+        <!-- Ícone Sair da Tela Cheia -->
+        <svg class="icon-exit" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9 1v8H1v2h9a1 1 0 001-1V1H9zm6 0v9a1 1 0 001 1h8v-2h-7V1h-2zM1 14h8v8h2v-9a1 1 0 00-1-1H1v2zm14-1v9h2v-8h7v-2h-8a1 1 0 00-1 1z"/>
+        </svg>
+    </button>
+
+    <script>
+    (function() {
+        var btn = document.getElementById('fullscreenBtn');
+        
+        btn.addEventListener('click', function() {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
+                var el = document.documentElement;
+                if (el.requestFullscreen) el.requestFullscreen();
+                else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+                else if (el.mozRequestFullScreen) el.mozRequestFullScreen();
+                else if (el.msRequestFullscreen) el.msRequestFullscreen();
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+                else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
+                else if (document.msExitFullscreen) document.msExitFullscreen();
+            }
+        });
+
+        function onFSChange() {
+            if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) {
+                btn.classList.add('is-fullscreen');
+            } else {
+                btn.classList.remove('is-fullscreen');
+            }
+        }
+
+        document.addEventListener('fullscreenchange', onFSChange);
+        document.addEventListener('webkitfullscreenchange', onFSChange);
+        document.addEventListener('mozfullscreenchange', onFSChange);
+        document.addEventListener('MSFullscreenChange', onFSChange);
+    })();
+    </script>
 </body>
 </html>
