@@ -417,22 +417,30 @@
                 e.preventDefault();
                 e.stopPropagation();
 
-                // 1) Em navegador VR (Wolvic/Pico): priorizar modo imersivo VR (WebXR), não fullscreen 2D
+                // 1) Se já está em tela cheia 2D: sair
+                if (getFullscreenElement()) {
+                    exitFullscreen();
+                    return;
+                }
+
+                // 2) Se já está em sessão VR: sair do VR
+                if (xrSession) {
+                    xrSession.end();
+                    return;
+                }
+
+                // 3) Em navegador VR (Wolvic/Pico): tentar modo imersivo VR (WebXR)
                 if (isVRBrowser() && navigator.xr) {
                     if (tryWebXR()) return;
                 }
 
-                // 2) Desktop / Mobile (não VR): Fullscreen API
+                // 4) Desktop / Mobile: entrar em tela cheia 2D
                 if (fsEnabled) {
-                    if (!getFullscreenElement()) {
-                        enterFullscreen();
-                    } else {
-                        exitFullscreen();
-                    }
+                    enterFullscreen();
                     return;
                 }
 
-                // 4) Fallback: toggle UI limpa
+                // 5) Fallback: toggle UI limpa
                 toggleUI();
             }
 
