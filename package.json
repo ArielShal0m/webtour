@@ -1,0 +1,11 @@
+{
+  "name": "webtour",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "vite --open",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^6.0.0"
+  }
+}
