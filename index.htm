@@ -35,11 +35,118 @@
 		.fill-viewport.landscape-right { right: env(safe-area-inset-right); }
         #viewer { z-index:1; }
         #preloadContainer { z-index:2; opacity:0; background-color:rgba(255,255,255,1); transition: opacity 0.5s; -webkit-transition: opacity 0.5s; -moz-transition: opacity 0.5s; -o-transition: opacity 0.5s;}
+        /* Esconde marca d'agua do trial 3DVista */
+        #viewer div[style*="z-index: 1000"][style*="pointer-events: none"][style*="position: absolute"] { display: none !important; visibility: hidden !important; }
+        #vr-enter-btn {
+            display: none;
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            background: rgba(0,0,0,0.75);
+            color: #fff;
+            border: 2px solid #fff;
+            border-radius: 12px;
+            padding: 18px 36px;
+            font-size: 22px;
+            font-family: Arial, sans-serif;
+            cursor: pointer;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            -webkit-tap-highlight-color: transparent;
+        }
+        #vr-enter-btn:active { background: rgba(255,255,255,0.2); }
     </style>
     
 </head>
 <body>
-    <div id="preloadContainer" class="fill-viewport"><div style="z-index: 4; position: absolute; overflow: hidden; left: 0%; top: 50%; width: 100.00%; height: 10.00%" ><div style="text-align:left; color:#000; "><DIV STYLE="text-align:center;font-size:1.6666666666666663vmin;"><SPAN STYLE="display:inline-block; letter-spacing:0vmin; white-space:pre-wrap;color:#777777;font-size:1.67vmin;font-family:Arial, Helvetica, sans-serif;">Loading virtual tour. Please wait...</SPAN></DIV><DIV STYLE="text-align:center;font-size:1.6666666666666663vmin;"><SPAN STYLE="display:inline-block; letter-spacing:0vmin; white-space:pre-wrap;color:#777777;font-size:1.67vmin;font-family:Arial, Helvetica, sans-serif;">created with the trial of 3DVista VT Pro</SPAN></DIV><DIV STYLE="text-align:center;font-size:1.4814814814814814vmin;"><A HREF="https://www.3dvista.com" TARGET="_blank" STYLE="text-decoration:none; color:inherit;"><SPAN STYLE="display:inline-block; letter-spacing:0vmin; white-space:pre-wrap;color:#999999;font-size:1.48vmin;font-family:Arial, Helvetica, sans-serif;"><U>www.3DVista.com</U></SPAN></A></DIV></div></div></div>
+    <div id="preloadContainer" class="fill-viewport"><div style="z-index: 4; position: absolute; overflow: hidden; left: 0%; top: 50%; width: 100.00%; height: 10.00%" ><div style="text-align:left; color:#000; "><DIV STYLE="text-align:center;font-size:1.6666666666666663vmin;"><SPAN STYLE="display:inline-block; letter-spacing:0vmin; white-space:pre-wrap;color:#777777;font-size:1.67vmin;font-family:Arial, Helvetica, sans-serif;">Carregando tour virtual. Aguarde...</SPAN></DIV></div></div></div>
     <div id="viewer" class="fill-viewport"></div>
+    <button id="vr-enter-btn">&#x1F97D; Entrar em VR 360&deg;</button>
+    <script>
+    (function() {
+        var vrBtn = document.getElementById('vr-enter-btn');
+        var vrAvailable = false;
+
+        function isVRBrowser() {
+            var ua = navigator.userAgent.toLowerCase();
+            return ua.indexOf('wolvic') > -1 ||
+                   ua.indexOf('mobile vr') > -1 ||
+                   ua.indexOf('oculusbrowser') > -1 ||
+                   ua.indexOf('picobrowser') > -1 ||
+                   ua.indexOf('firefox reality') > -1 ||
+                   ua.indexOf('vrapp') > -1;
+        }
+
+        function checkXRSupport() {
+            if (!navigator.xr) return;
+            navigator.xr.isSessionSupported('immersive-vr').then(function(supported) {
+                if (supported) {
+                    vrAvailable = true;
+                    vrBtn.style.display = 'block';
+                }
+            }).catch(function() {});
+        }
+
+        function tryEnableVR() {
+            // Método 1: API pública do 3DVista via TDV.Tour.Script
+            try {
+                if (window.TDV && window.TDV.Tour && window.TDV.Tour.Script && window.TDV.Tour.Script.enableVR) {
+                    if (window.tour && window.tour.player) {
+                        TDV.Tour.Script.enableVR.call(window.tour.player);
+                        return;
+                    }
+                }
+            } catch(e) {}
+
+            // Método 2: toggleVR via player
+            try {
+                if (window.TDV && window.TDV.Tour && window.TDV.Tour.Script && window.TDV.Tour.Script.toggleVR) {
+                    if (window.tour && window.tour.player) {
+                        TDV.Tour.Script.toggleVR.call(window.tour.player);
+                        return;
+                    }
+                }
+            } catch(e) {}
+
+            // Método 3: Clicar no botão interno do player se existir
+            try {
+                var internalVRBtn = document.querySelector('[data-name="Button settings VR"], [title*="VR"], [aria-label*="VR"]');
+                if (internalVRBtn) { internalVRBtn.click(); return; }
+            } catch(e) {}
+
+            // Método 4: Sessão WebXR direta
+            if (navigator.xr && vrAvailable) {
+                navigator.xr.requestSession('immersive-vr', {
+                    optionalFeatures: ['local-floor', 'bounded-floor', 'hand-tracking']
+                }).then(function(session) {
+                    // Tenta passar a sessão ao player 3DVista
+                    if (window.tour && window.tour.player && window.tour.player.setXRSession) {
+                        window.tour.player.setXRSession(session);
+                    }
+                }).catch(function(err) {
+                    console.warn('WebXR session error:', err);
+                });
+            }
+        }
+
+        vrBtn.addEventListener('click', function() {
+            tryEnableVR();
+        });
+
+        // Verifica suporte ao carregar
+        if (isVRBrowser()) {
+            // Em browser VR, sempre mostra o botão e verifica WebXR
+            vrBtn.style.display = 'block';
+        }
+        checkXRSupport();
+
+        // Recheck após o tour carregar (pode demorar)
+        window.addEventListener('load', function() {
+            setTimeout(checkXRSupport, 2000);
+        });
+    })();
+    </script>
 </body>
 </html>
