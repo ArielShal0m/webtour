@@ -3,9 +3,16 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "vite --open",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:apk": "npx cap sync android && cd android && .\\gradlew.bat assembleDebug",
+    "copy:apk": "copy android\\app\\build\\outputs\\apk\\debug\\app-debug.apk ..\\webtour.apk"
   },
   "devDependencies": {
     "vite": "^6.0.0"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.2.0",
+    "@capacitor/cli": "^8.2.0",
+    "@capacitor/core": "^8.2.0"
   }
 }
