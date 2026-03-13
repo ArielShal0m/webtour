@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Formulário - WebTour</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="form-page">
+    <header class="form-header" id="form_header">
+      <h1>Formulário</h1>
+      <p>Responda às perguntas para receber sugestões personalizadas.</p>
+    </header>
+    <div class="progress-dots" id="form_progress"></div>
+    <main id="form_content"></main>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js" defer></script>
+  <script>
+    window.FORM_PROGRESS_CONTAINER = document.getElementById('form_progress');
+    window.FORM_BASE_URL = 'index.html';
+  </script>
+  <script src="supabase-config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin - Formulário</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="admin-page">
+    <h1>Edição do formulário</h1>
+    <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+      Altere perguntas e textos abaixo. As alterações são salvas localmente e usadas no formulário.
+    </p>
+    <p style="margin-bottom: 1rem;">
+      <a href="index.html?step=quest1" class="btn btn-primary">Abrir formulário</a>
+    </p>
+
+    <h2 style="margin-top: 2rem;">Perguntas</h2>
+    <button type="button" class="btn btn-secondary" id="admin_add_question" style="margin-bottom: 1rem;">+ Nova pergunta</button>
+    <div id="admin_questions"></div>
+
+    <h2 style="margin-top: 2rem;">Textos informativos</h2>
+    <button type="button" class="btn btn-secondary" id="admin_add_text" style="margin-bottom: 1rem;">+ Novo texto</button>
+    <div id="admin_texts"></div>
+
+    <h2 style="margin-top: 2rem;">Cursos (recomendação)</h2>
+    <p style="color: var(--text-muted); font-size: 0.9rem;">Lista usada para sugerir cursos no final. Edição avançada pode ser feita no código (admin.js / app.js).</p>
+    <div id="admin_courses"></div>
+  </div>
+  <script src="admin.js"></script>
+</body>
+</html>

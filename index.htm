@@ -25,12 +25,32 @@
         .fill-viewport.landscape-left { left: env(safe-area-inset-left); }
 		.fill-viewport.landscape-right { right: env(safe-area-inset-right); }
         #viewer { z-index:1; }
-        #preloadContainer { z-index:2; opacity:0; background-color:rgba(255,255,255,1); transition: opacity 0.5s; -webkit-transition: opacity 0.5s; -moz-transition: opacity 0.5s; -o-transition: opacity 0.5s;}
+        #preloadContainer { z-index:2; opacity:0; background-color:rgba(0,0,0,1); transition: opacity 0.5s; -webkit-transition: opacity 0.5s; -moz-transition: opacity 0.5s; -o-transition: opacity 0.5s;
+            background-image: url('media/panorama_8B7F0EA3_8704_03DC_41BD_8BEDCF4DB6CC_hd_t.jpg'); background-size: cover; background-position: center; }
     </style>
+    <script>
+    setInterval(function(){
+      var v=document.getElementById('viewer');if(!v)return;
+      var els=v.querySelectorAll('div[style]');
+      els.forEach(function(el){
+        var s=el.getAttribute('style')||'';
+        if(s.indexOf('z-index')!==-1&&s.indexOf('1000')!==-1&&s.indexOf('pointer-events: none')!==-1&&s.indexOf('background-image')!==-1){
+          el.style.display='none';
+        }
+      });
+    },2000);
+    </script>
     
 </head>
 <body>
-    <div id="preloadContainer" class="fill-viewport"><div style="z-index: 4; position: absolute; overflow: hidden; left: 0%; top: 50%; width: 100.00%; height: 10.00%" ><div style="text-align:left; color:#000; "><DIV STYLE="text-align:center;font-size:1.6666666666666663vmin;"><SPAN STYLE="display:inline-block; letter-spacing:0vmin; white-space:pre-wrap;color:#777777;font-size:1.67vmin;font-family:Arial, Helvetica, sans-serif;">Loading virtual tour. Please wait...</SPAN></DIV><DIV STYLE="text-align:center;font-size:1.6666666666666663vmin;"><SPAN STYLE="display:inline-block; letter-spacing:0vmin; white-space:pre-wrap;color:#777777;font-size:1.67vmin;font-family:Arial, Helvetica, sans-serif;">created with the trial of 3DVista VT Pro</SPAN></DIV><DIV STYLE="text-align:center;font-size:1.4814814814814814vmin;"><A TARGET="_blank" HREF="https://www.3dvista.com" STYLE="text-decoration:none; color:inherit;"><SPAN STYLE="display:inline-block; letter-spacing:0vmin; white-space:pre-wrap;color:#999999;font-size:1.48vmin;font-family:Arial, Helvetica, sans-serif;"><U>www.3DVista.com</U></SPAN></A></DIV></div></div></div>
+    <div id="preloadContainer" class="fill-viewport">
+      <div style="position:absolute;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;">
+        <div style="text-align:center;color:#fff;font-family:Arial,Helvetica,sans-serif;">
+          <div style="font-size:2.5vmin;font-weight:700;margin-bottom:1vmin;">WebTour</div>
+          <div style="font-size:1.5vmin;opacity:0.8;">Carregando tour virtual...</div>
+        </div>
+      </div>
+    </div>
     <div id="viewer" class="fill-viewport"></div>
 </body>
 </html>
