@@ -124,6 +124,17 @@
     }
   }
 
+  function getTourUrl() {
+    if (window.FORM_TOUR_URL) return window.FORM_TOUR_URL;
+    return window.location.pathname.indexOf('/form/') !== -1 ? '../index.htm' : 'index.htm';
+  }
+
+  function goToTour() {
+    try { window.close(); } catch (e) {}
+    if (window.closed) return;
+    window.location.href = getTourUrl();
+  }
+
   function showContinueTour(container, header, message) {
     if (header) {
       header.innerHTML = '<h1>✓ Feito!</h1>';
@@ -133,8 +144,9 @@
         '<div class="continue-icon">✓</div>' +
         '<h2>' + escapeHtml(message || 'Continue o tour!') + '</h2>' +
         '<p>Explore o tour virtual e encontre o próximo ponto de interação.</p>' +
-        '<button type="button" class="btn btn-primary btn-close-form" onclick="window.close(); if(!window.closed) history.back();">Voltar ao Tour</button>' +
+        '<button type="button" class="btn btn-primary btn-close-form" id="btn_go_tour">Voltar ao Tour</button>' +
       '</div>';
+    container.querySelector('#btn_go_tour').addEventListener('click', goToTour);
   }
 
   function computeRecommendation() {
@@ -242,7 +254,7 @@
     if (!submitted) {
       return '<div class="card"><h2>Nenhum resultado ainda</h2>' +
         '<p style="color:#555;">Responda as perguntas e preencha o formulário nos pontos anteriores do tour para ver sua recomendação.</p>' +
-        '<div class="form-nav"><button class="btn btn-primary btn-full" onclick="window.close(); if(!window.closed) history.back();">Voltar ao Tour</button></div></div>';
+        '<div class="form-nav"><button type="button" class="btn btn-primary btn-full" id="btn_go_tour_result">Voltar ao Tour</button></div></div>';
     }
 
     var result = computeRecommendation();
@@ -270,7 +282,7 @@
     }
 
     html += '<div class="form-nav" style="margin-top:1.5rem">';
-    html += '<button class="btn btn-primary btn-full" onclick="window.close(); if(!window.closed) history.back();">Voltar ao Tour</button>';
+    html += '<button type="button" class="btn btn-primary btn-full" id="btn_go_tour_final">Voltar ao Tour</button>';
     html += '</div>';
     return html;
   }
@@ -364,6 +376,8 @@
     } else if (step.type === 'result') {
       if (header) header.innerHTML = '<h1>Seu Resultado</h1><p>Baseado nas suas respostas, este é o curso ideal para você.</p>';
       container.innerHTML = renderResult();
+      var tourBtn = container.querySelector('#btn_go_tour_result, #btn_go_tour_final');
+      if (tourBtn) tourBtn.addEventListener('click', goToTour);
 
       if (window.FORM_PROGRESS_CONTAINER) {
         renderProgress(window.FORM_PROGRESS_CONTAINER, totalSteps - 1, totalSteps);

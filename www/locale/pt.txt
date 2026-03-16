@@ -1,15 +1,13 @@
 #: locale=pt
 
+## Action
+
+### URL
+PopupWebFrameBehaviour_E36C1E9B_F45C_6719_415D_D24AC4D6161A.url = https://webtour-plum.vercel.app/form/index.html?step=final
+PopupWebFrameBehaviour_E3D9420E_F454_9EF8_41BC_1CEF7D3978CF.url = https://webtour-plum.vercel.app/form/index.html?step=quest1
+PopupWebFrameBehaviour_ECFE6F3D_F454_A519_41E2_42AF39966095.url = https://webtour-plum.vercel.app/form/index.html?step=quest2
+
 ## E-Learning
-
-### Answer
-questionOption_A4636DC9_B10D_275D_41D8_12A9091EA4FA.text = 1
-questionOption_A43190DF_B10D_3D76_41CE_5CC13073F2DB.text = 11
-questionOption_A46DA298_B10D_5DFB_41AE_6CA6200C388B.text = 2
-questionOption_A4172707_B10D_24D6_41E1_EE68392AD6D5.text = 4
-
-### Question
-question_A5EA30D3_B10D_DD4D_41D8_0A128F3F6CB6.title = 1+1=?
 
 ### Question Screen
 quizQuestion_A720F459_B10D_257D_41B8_C932534FDA1B.ok = OK
@@ -37,9 +35,16 @@ quizTimeout_A720C459_B10D_257D_41C2_42CAF4A87585.score = View Score
 ## Hotspot
 
 ### URL
-overlay_A0F5F184_B0F7_5FCA_41E3_9FE81AA15347.url = https://www.testedeqi.org/
+overlay_FC629D04_F3DC_AAE8_41D0_76CD17FBFAA0.url = https://unicit.com.br/
+FramePanoramaOverlay_E6C92ABB_F3F4_EF19_41E6_1F906DF51D75.url = https://webtour-plum.vercel.app/form/index.html?step=text1
+FramePanoramaOverlay_E7F26D1D_F3F4_E519_41C2_9224B49130B6.url = https://webtour-plum.vercel.app/form/index.html?step=text2
 
 ## Media
+
+### Audio
+audiores_E51ED46F_F3D3_9B39_41D5_D2FFDC808595.mp3Url = media/audio_E7180D24_F3DD_E528_41C3_94965D5C77D4_pt.mp3
+
+### Audio Subtitles
 
 ### Title
 video_A07DA9A9_B11F_6FDD_41E2_159CC766788D.label = Robô_Voando_com_Fundo_Transparente

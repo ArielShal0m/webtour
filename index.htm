@@ -6,51 +6,31 @@
     <meta name="viewport" id="metaViewport" content="user-scalable=no, initial-scale=1, width=device-width, viewport-fit=cover" data-tdv-general-scale="0.5"/>
     <meta name="apple-mobile-web-app-capable" content="yes"/>
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <script src="lib/tdvplayer.js?v=1773183809745"></script>
-    <link rel="preload" href="locale/pt.txt?v=1773183809745" as="fetch" crossorigin="anonymous"/>
-	<link rel="preload" href="script.js?v=1773183809745" as="script"/>
-	<link rel="preload" href="media/panorama_8B7F0EA3_8704_03DC_41BD_8BEDCF4DB6CC_0/r/3/0_0.webp?v=1773183809745" as="image"/>
-	<link rel="preload" href="media/panorama_8B7F0EA3_8704_03DC_41BD_8BEDCF4DB6CC_0/l/3/0_0.webp?v=1773183809745" as="image"/>
-	<link rel="preload" href="media/panorama_8B7F0EA3_8704_03DC_41BD_8BEDCF4DB6CC_0/u/3/0_0.webp?v=1773183809745" as="image"/>
-	<link rel="preload" href="media/panorama_8B7F0EA3_8704_03DC_41BD_8BEDCF4DB6CC_0/d/3/0_0.webp?v=1773183809745" as="image"/>
-	<link rel="preload" href="media/panorama_8B7F0EA3_8704_03DC_41BD_8BEDCF4DB6CC_0/f/3/0_0.webp?v=1773183809745" as="image"/>
-	<link rel="preload" href="media/panorama_8B7F0EA3_8704_03DC_41BD_8BEDCF4DB6CC_0/b/3/0_0.webp?v=1773183809745" as="image"/>
+    <script src="lib/tdvplayer.js?v=1773621945882"></script>
+    <link rel="preload" href="locale/pt.txt?v=1773621945882" as="fetch" crossorigin="anonymous"/>
+	<link rel="preload" href="script.js?v=1773621945882" as="script"/>
+	<link rel="preload" href="media/panorama_8B7F0EA3_8704_03DC_41BD_8BEDCF4DB6CC_0/r/3/0_0.webp?v=1773621945882" as="image"/>
+	<link rel="preload" href="media/panorama_8B7F0EA3_8704_03DC_41BD_8BEDCF4DB6CC_0/l/3/0_0.webp?v=1773621945882" as="image"/>
+	<link rel="preload" href="media/panorama_8B7F0EA3_8704_03DC_41BD_8BEDCF4DB6CC_0/u/3/0_0.webp?v=1773621945882" as="image"/>
+	<link rel="preload" href="media/panorama_8B7F0EA3_8704_03DC_41BD_8BEDCF4DB6CC_0/d/3/0_0.webp?v=1773621945882" as="image"/>
+	<link rel="preload" href="media/panorama_8B7F0EA3_8704_03DC_41BD_8BEDCF4DB6CC_0/f/3/0_0.webp?v=1773621945882" as="image"/>
+	<link rel="preload" href="media/panorama_8B7F0EA3_8704_03DC_41BD_8BEDCF4DB6CC_0/b/3/0_0.webp?v=1773621945882" as="image"/>
 	<script src="tdvquiz.js" type="text/javascript"></script>
 	<meta name="description" content="Virtual Tour"/>
 	<meta name="theme-color" content="#FFFFFF"/>
-    <script src="script.js?v=1773183809745"></script>
+    <script src="script.js?v=1773621945882"></script>
     <style type="text/css">
         html, body { height:100%; width:100%; height:100vh; width:100vw; margin:0; padding:0; overflow:hidden; }
         .fill-viewport { position:fixed; top:0; left:0; right:0; bottom:0; padding:0; margin:0; overflow: hidden; }
         .fill-viewport.landscape-left { left: env(safe-area-inset-left); }
 		.fill-viewport.landscape-right { right: env(safe-area-inset-right); }
         #viewer { z-index:1; }
-        #preloadContainer { z-index:2; opacity:0; background-color:rgba(0,0,0,1); transition: opacity 0.5s; -webkit-transition: opacity 0.5s; -moz-transition: opacity 0.5s; -o-transition: opacity 0.5s;
-            background-image: url('media/panorama_8B7F0EA3_8704_03DC_41BD_8BEDCF4DB6CC_hd_t.jpg'); background-size: cover; background-position: center; }
+        #preloadContainer { z-index:2; opacity:0; background-color:rgba(255,255,255,1); transition: opacity 0.5s; -webkit-transition: opacity 0.5s; -moz-transition: opacity 0.5s; -o-transition: opacity 0.5s;}
     </style>
-    <script>
-    setInterval(function(){
-      var v=document.getElementById('viewer');if(!v)return;
-      var els=v.querySelectorAll('div[style]');
-      els.forEach(function(el){
-        var s=el.getAttribute('style')||'';
-        if(s.indexOf('z-index')!==-1&&s.indexOf('1000')!==-1&&s.indexOf('pointer-events: none')!==-1&&s.indexOf('background-image')!==-1){
-          el.style.display='none';
-        }
-      });
-    },2000);
-    </script>
     
 </head>
 <body>
-    <div id="preloadContainer" class="fill-viewport">
-      <div style="position:absolute;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;">
-        <div style="text-align:center;color:#fff;font-family:Arial,Helvetica,sans-serif;">
-          <div style="font-size:2.5vmin;font-weight:700;margin-bottom:1vmin;">WebTour</div>
-          <div style="font-size:1.5vmin;opacity:0.8;">Carregando tour virtual...</div>
-        </div>
-      </div>
-    </div>
+    <div id="preloadContainer" class="fill-viewport" style="background:url('media/panorama_8B7F0EA3_8704_03DC_41BD_8BEDCF4DB6CC_hd_t.jpg') center/cover no-repeat #111;"><div style="position:absolute;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;"><div style="text-align:center;color:#fff;font-family:Arial,Helvetica,sans-serif;"><div style="font-size:2.5vmin;font-weight:700;margin-bottom:1vmin;">WebTour</div><div style="font-size:1.5vmin;opacity:0.8;">Carregando tour virtual...</div></div></div></div>
     <div id="viewer" class="fill-viewport"></div>
 </body>
 </html>
