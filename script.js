@@ -253,6 +253,14 @@ function onLoad() {
         return;
     }
 
+    // Sempre instalar fix de hotspots em modo VR (real ou simulado)
+    installVRHotspotFix();
+
+    // Ativa simulação VR no PC quando ?simulateVR=1 está na URL
+    if (Object.hasOwn(params, 'simulatevr')) {
+        installVRSimulator();
+    }
+
     showPreloader();
 			loadTour();
 }
@@ -359,3 +367,394 @@ function getParams(value) {
 
 document.addEventListener('DOMContentLoaded', onLoad);
 window.addEventListener('message', onMessage);
+
+// =============================================================================
+// FIX: Hotspots em modo VR — intercepta navegações e mostra iframe popup
+// Funciona em VR real (Quest/Cardboard) e no modo ?simulateVR=1
+// =============================================================================
+
+function installVRHotspotFix() {
+    let vrActive = false;
+
+    // Rastrear estado VR do simulador
+    window.addEventListener('vr-sim-started', () => { vrActive = true; });
+    window.addEventListener('vr-sim-ended',   () => { vrActive = false; });
+
+    // Rastrear sessão XR real (Quest, Cardboard, etc.)
+    function hookXRSession(session, mode) {
+        if (!mode.includes('vr')) return;
+        vrActive = true;
+        session.addEventListener('end', () => { vrActive = false; });
+    }
+
+    function hookXRSystem() {
+        const xr = navigator.xr;
+        if (!xr || xr._hotspotHooked) return;
+        xr._hotspotHooked = true;
+        const origRequest = xr.requestSession.bind(xr);
+        xr.requestSession = function(mode, opts) {
+            const p = origRequest(mode, opts);
+            p.then(session => hookXRSession(session, mode)).catch(() => {});
+            return p;
+        };
+    }
+
+    // Tentar hook imediato e após o player inicializar
+    hookXRSystem();
+    setTimeout(hookXRSystem, 1500);
+    setTimeout(hookXRSystem, 4000);
+
+    // ── Interceptar window.location.href ─────────────────────────────────────
+    // O tdvplayer.js em VR mode faz: window.location.href = url (linha ~3532)
+    // Isso causa tela preta. Interceptamos e mostramos um iframe overlay.
+    try {
+        const locProto = Object.getPrototypeOf(window.location);
+        const desc = Object.getOwnPropertyDescriptor(locProto, 'href');
+        if (desc && desc.set) {
+            Object.defineProperty(locProto, 'href', {
+                get() { return desc.get.call(this); },
+                set(url) {
+                    if (vrActive && isHotspotNavigation(url)) {
+                        showVRPopup(url);
+                    } else {
+                        desc.set.call(this, url);
+                    }
+                },
+                configurable: true
+            });
+        }
+    } catch (e) {
+        console.warn('[VR Fix] Não foi possível interceptar location.href:', e);
+    }
+
+    // ── Interceptar window.open ───────────────────────────────────────────────
+    // Alguns hotspots "popup" usam window.open em vez de location.href
+    const _origOpen = window.open;
+    window.open = function(url, target, features) {
+        if (vrActive && url && isHotspotNavigation(url)) {
+            showVRPopup(url);
+            return null;
+        }
+        return _origOpen.call(window, url, target, features);
+    };
+
+    // Decidir se a URL é uma navegação de hotspot (não navegação interna do player)
+    function isHotspotNavigation(url) {
+        if (!url || typeof url !== 'string') return false;
+        if (url.startsWith('#')) return false; // só hash, não navega
+        try {
+            const dest = new URL(url, window.location.href);
+            const curr = window.location;
+            // Mesma página (mesmo path + search) → não interceptar
+            if (dest.origin === curr.origin &&
+                dest.pathname === curr.pathname &&
+                dest.search === curr.search) return false;
+            // Qualquer outra URL http/https → interceptar
+            return /^https?:$/i.test(dest.protocol);
+        } catch (e) {
+            return /^https?:\/\//i.test(url);
+        }
+    }
+
+    // ── Popup VR: iframe overlay fullscreen ───────────────────────────────────
+    function showVRPopup(url) {
+        const POPUP_ID = 'vr-hotspot-popup';
+        const existing = document.getElementById(POPUP_ID);
+        if (existing) existing.remove();
+
+        // Injetar estilos
+        if (!document.getElementById('vr-popup-styles')) {
+            const s = document.createElement('style');
+            s.id = 'vr-popup-styles';
+            s.textContent = `
+                #vr-hotspot-popup {
+                    position: fixed; inset: 0; z-index: 9999999;
+                    background: rgba(0,0,0,.95);
+                    display: flex; flex-direction: column;
+                    font-family: Arial, Helvetica, sans-serif;
+                }
+                #vr-hotspot-popup .vr-popup-bar {
+                    display: flex; align-items: center; justify-content: space-between;
+                    padding: 10px 16px; background: #1c1c1c;
+                    border-bottom: 1px solid #333; flex-shrink: 0; gap: 12px;
+                }
+                #vr-hotspot-popup .vr-popup-url {
+                    color: #888; font-size: 12px;
+                    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+                    flex: 1; min-width: 0;
+                }
+                #vr-popup-back-btn {
+                    background: #2d2d2d; border: 1px solid #555; color: #fff;
+                    padding: 8px 18px; border-radius: 6px; cursor: pointer;
+                    font-size: 13px; white-space: nowrap; flex-shrink: 0;
+                    transition: background .15s;
+                }
+                #vr-popup-back-btn:hover { background: #3d3d3d; }
+                #vr-hotspot-popup iframe {
+                    flex: 1; border: none; width: 100%; background: #fff;
+                }
+            `;
+            document.head.appendChild(s);
+        }
+
+        const shortUrl = url.length > 70 ? url.slice(0, 67) + '…' : url;
+
+        const popup = document.createElement('div');
+        popup.id = POPUP_ID;
+        popup.innerHTML = `
+            <div class="vr-popup-bar">
+                <span class="vr-popup-url" title="${url}">${shortUrl}</span>
+                <button id="vr-popup-back-btn">← Voltar ao Tour</button>
+            </div>
+            <iframe
+                src="${url}"
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation allow-modals"
+                allow="fullscreen; payment"
+            ></iframe>
+        `;
+        document.body.appendChild(popup);
+
+        document.getElementById('vr-popup-back-btn').addEventListener('click', () => {
+            popup.remove();
+        });
+
+        const onEsc = (e) => {
+            if (e.key === 'Escape') { popup.remove(); document.removeEventListener('keydown', onEsc); }
+        };
+        document.addEventListener('keydown', onEsc);
+
+        console.log('[VR Fix] Popup aberto para:', url);
+    }
+}
+
+// =============================================================================
+// VR Simulator para Desktop — ativa com ?simulateVR=1
+// Fornece mock WebXR + overlay CSS estéreo sem precisar de óculos físicos
+// =============================================================================
+
+function installVRSimulator() {
+    installWebXRMock();
+
+    window.addEventListener('vr-sim-started', function() {
+        setTimeout(addVRChrome, 400);
+    }, { once: true });
+
+    // Fallback: se o player não disparar sessão, add overlay após 3s
+    setTimeout(function() {
+        if (!document.getElementById('vr-chrome')) addVRChrome();
+    }, 3000);
+}
+
+function installWebXRMock() {
+    const nav = navigator;
+    if (nav.xr && !nav.xr._simulated) {
+        nav.xr.isSessionSupported('immersive-vr')
+            .then(ok => { if (!ok) _overrideXR(); })
+            .catch(() => _overrideXR());
+    } else {
+        _overrideXR();
+    }
+}
+
+function _overrideXR() {
+    // ── Head tracking via mouse ──────────────────────────────────────────────
+    const head = { yaw: 0, pitch: 0, ty: 0, tp: 0 };
+
+    window.addEventListener('mousemove', function(e) {
+        const cx = window.innerWidth / 2;
+        const cy = window.innerHeight / 2;
+        head.ty = ((e.clientX - cx) / cx) * (Math.PI / 6);
+        head.tp = -((e.clientY - cy) / cy) * (Math.PI / 9);
+    });
+
+    (function animHead() {
+        head.yaw  += (head.ty - head.yaw)  * 0.07;
+        head.pitch += (head.tp - head.pitch) * 0.07;
+        requestAnimationFrame(animHead);
+    })();
+
+    function headQuat() {
+        const hy = head.yaw / 2, hp = head.pitch / 2;
+        const cy = Math.cos(hy), sy = Math.sin(hy);
+        const cp = Math.cos(hp), sp = Math.sin(hp);
+        return { x: cy * sp, y: sy * cp, z: -sy * sp, w: cy * cp };
+    }
+
+    function quatToMat4(q) {
+        const { x, y, z, w } = q;
+        return new Float32Array([
+            1 - 2*(y*y + z*z),  2*(x*y + z*w),      2*(x*z - y*w),     0,
+            2*(x*y - z*w),      1 - 2*(x*x + z*z),  2*(y*z + x*w),     0,
+            2*(x*z + y*w),      2*(y*z - x*w),      1 - 2*(x*x + y*y), 0,
+            0, 0, 0, 1
+        ]);
+    }
+
+    function projMat(fov, near, far) {
+        const f = 1 / Math.tan(fov / 2), nf = 1 / (near - far);
+        return new Float32Array([
+            f, 0, 0, 0,  0, f, 0, 0,
+            0, 0, (far + near) * nf, -1,
+            0, 0, 2 * far * near * nf, 0
+        ]);
+    }
+
+    function rigidTransform(px, py, pz, q) {
+        const m = quatToMat4(q);
+        m[12] = px; m[13] = py; m[14] = pz;
+        const inv = new Float32Array([
+            m[0], m[4], m[8], 0,  m[1], m[5], m[9], 0,
+            m[2], m[6], m[10], 0,
+            -(m[0]*px + m[1]*py + m[2]*pz),
+            -(m[4]*px + m[5]*py + m[6]*pz),
+            -(m[8]*px + m[9]*py + m[10]*pz), 1
+        ]);
+        return {
+            matrix: m, position: { x: px, y: py, z: pz }, orientation: q,
+            inverse: { matrix: inv, position: { x: -px, y: -py, z: -pz }, orientation: { x: -q.x, y: -q.y, z: -q.z, w: q.w } }
+        };
+    }
+
+    const IPD = 0.032, EYE_H = 1.6, FOV = Math.PI / 2;
+
+    function makeView(eyeOff) {
+        const q = headQuat();
+        return { eye: eyeOff < 0 ? 'left' : 'right', projectionMatrix: projMat(FOV, 0.1, 1000), transform: rigidTransform(eyeOff, EYE_H, 0, q), viewport: null };
+    }
+
+    function makeViewerPose() {
+        return { transform: rigidTransform(0, EYE_H, 0, headQuat()), views: [makeView(-IPD), makeView(IPD)], emulatedPosition: true };
+    }
+
+    let rafId = 0, rafActive = false;
+    const rafCbs = new Map(), sHandlers = {};
+    const mockRefSpace = { getOffsetReferenceSpace() { return this; } };
+    const mockFrame = {
+        get session() { return mockSession; },
+        getViewerPose() { return makeViewerPose(); },
+        getHitTestResults() { return []; }, getPose() { return null; }, getLightEstimate() { return null; }
+    };
+
+    const mockSession = {
+        mode: 'immersive-vr', environmentBlendMode: 'opaque', interactionMode: 'world-space',
+        inputSources: [], visibilityState: 'visible', supportedFrameRates: null, frameRate: null,
+        renderState: { depthNear: 0.1, depthFar: 1000, baseLayer: null, inlineVerticalFieldOfView: null },
+        requestAnimationFrame(cb) { const id = ++rafId; rafCbs.set(id, cb); return id; },
+        cancelAnimationFrame(id) { rafCbs.delete(id); },
+        async requestReferenceSpace() { return mockRefSpace; },
+        updateRenderState(s) { if (s) Object.assign(this.renderState, s); },
+        async end() {
+            rafActive = false; rafCbs.clear(); this._fire('end', {});
+            window.dispatchEvent(new CustomEvent('vr-sim-ended'));
+            const el = document.getElementById('vr-chrome'); if (el) el.remove();
+        },
+        addEventListener(t, cb) { (sHandlers[t] = sHandlers[t] || []).push(cb); },
+        removeEventListener(t, cb) { if (sHandlers[t]) sHandlers[t] = sHandlers[t].filter(h => h !== cb); },
+        _fire(t, e) { (sHandlers[t] || []).forEach(cb => { try { cb(Object.assign({ type: t, target: mockSession }, e)); } catch (err) {} }); }
+    };
+
+    function runRaf() {
+        if (!rafActive) return;
+        const t = performance.now();
+        const entries = [...rafCbs.entries()];
+        for (const [id, cb] of entries) { rafCbs.delete(id); if (cb) { try { cb(t, mockFrame); } catch (e) {} } }
+        requestAnimationFrame(runRaf);
+    }
+
+    const xrHandlers = {};
+    const mockXR = {
+        _simulated: true,
+        isSessionSupported(mode) { return Promise.resolve(mode === 'immersive-vr' || mode === 'inline'); },
+        requestSession(mode) {
+            console.log('[VR Sim] Sessão XR iniciada:', mode);
+            rafActive = true; requestAnimationFrame(runRaf);
+            window.dispatchEvent(new CustomEvent('vr-sim-started', { detail: { mode } }));
+            return Promise.resolve(mockSession);
+        },
+        addEventListener(t, cb) { (xrHandlers[t] = xrHandlers[t] || []).push(cb); },
+        removeEventListener(t, cb) { if (xrHandlers[t]) xrHandlers[t] = xrHandlers[t].filter(h => h !== cb); },
+        dispatchEvent(e) { (xrHandlers[e.type] || []).forEach(cb => { try { cb(e); } catch (err) {} }); return true; }
+    };
+
+    if (!window.XRWebGLLayer) {
+        window.XRWebGLLayer = function XRWebGLLayer(session, ctx, opts) {
+            this.session = session; this.context = ctx;
+            this.antialias = !opts || opts.antialias !== false;
+            this.ignoreDepthValues = false; this.fixedFoveation = 0; this.framebuffer = null;
+            this.framebufferWidth  = (ctx.canvas ? ctx.canvas.width  : window.innerWidth)  * 2;
+            this.framebufferHeight = ctx.canvas ? ctx.canvas.height : window.innerHeight;
+        };
+        window.XRWebGLLayer.getNativeFramebufferScaleFactor = function() { return 1.0; };
+    }
+
+    try {
+        Object.defineProperty(navigator, 'xr', { value: mockXR, configurable: true, writable: true });
+        console.log('[VR Sim] WebXR instalado — immersive-vr disponível no PC');
+    } catch (e) {
+        navigator.xr = mockXR;
+    }
+}
+
+function addVRChrome() {
+    if (document.getElementById('vr-chrome')) return;
+
+    const style = document.createElement('style');
+    style.textContent = `
+        #vr-chrome { position:fixed;inset:0;z-index:999999;pointer-events:none;display:flex;flex-direction:column; }
+        #vr-chrome .vr-lenses { flex:1;display:flex;position:relative; }
+        #vr-chrome .vr-eye { flex:1;position:relative;overflow:hidden; }
+        #vr-vig-l { position:absolute;inset:0;border-radius:0 50% 50% 0;
+            background:radial-gradient(ellipse 68% 78% at 60% 50%,transparent 48%,rgba(0,0,0,.78) 76%,rgba(0,0,0,.97) 100%); }
+        #vr-vig-r { position:absolute;inset:0;border-radius:50% 0 0 50%;
+            background:radial-gradient(ellipse 68% 78% at 40% 50%,transparent 48%,rgba(0,0,0,.78) 76%,rgba(0,0,0,.97) 100%); }
+        #vr-bridge { width:6px;background:#000;flex-shrink:0;z-index:5; }
+        #vr-scanlines { position:absolute;inset:0;pointer-events:none;
+            background-image:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.06) 3px,rgba(0,0,0,.06) 4px); }
+        #vr-hud { position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;
+            padding:12px 20px;pointer-events:none;user-select:none;
+            font:11px "Courier New",monospace;color:rgba(80,255,120,.85); }
+        #vr-hud .vr-top { display:flex;justify-content:space-between;align-items:center; }
+        .vr-chip { background:rgba(0,200,80,.12);border:1px solid rgba(0,255,80,.3);border-radius:4px;padding:3px 9px;letter-spacing:1.5px; }
+        .vr-meta { opacity:.65;margin-left:8px; }
+        .vr-actions { pointer-events:all; }
+        #vr-exit-btn { cursor:pointer;background:rgba(255,60,60,.15);border:1px solid rgba(255,80,80,.4);
+            border-radius:4px;padding:3px 10px;color:rgba(255,110,110,.9);font:11px "Courier New",monospace;letter-spacing:1px; }
+        #vr-exit-btn:hover { background:rgba(255,60,60,.3); }
+        #vr-hud .vr-bottom { text-align:center;opacity:.5;font-size:10px; }
+        #vr-crosshair { position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:20px;height:20px; }
+        #vr-crosshair::before { content:"";position:absolute;left:50%;top:0;width:1px;height:100%;background:rgba(80,255,120,.4);transform:translateX(-50%); }
+        #vr-crosshair::after  { content:"";position:absolute;top:50%;left:0;width:100%;height:1px;background:rgba(80,255,120,.4);transform:translateY(-50%); }
+    `;
+    document.head.appendChild(style);
+
+    const chrome = document.createElement('div');
+    chrome.id = 'vr-chrome';
+    chrome.innerHTML = `
+        <div class="vr-lenses">
+            <div class="vr-eye"><div id="vr-vig-l"></div></div>
+            <div id="vr-bridge"></div>
+            <div class="vr-eye"><div id="vr-vig-r"></div></div>
+            <div id="vr-scanlines"></div>
+            <div id="vr-crosshair"></div>
+        </div>
+        <div id="vr-hud">
+            <div class="vr-top">
+                <div><span class="vr-chip">◉ VR SIM</span><span class="vr-meta">WebXR · immersive-vr · PC</span></div>
+                <div class="vr-actions"><button id="vr-exit-btn">✕ Sair VR</button></div>
+            </div>
+            <div class="vr-bottom">Mouse: head tracking &nbsp;·&nbsp; Clique hotspots para navegar &nbsp;·&nbsp; ESC: sair</div>
+        </div>
+    `;
+    document.body.appendChild(chrome);
+
+    document.getElementById('vr-exit-btn').addEventListener('click', () => {
+        chrome.remove();
+        const url = new URL(window.location.href);
+        url.searchParams.delete('simulateVR');
+        window.history.pushState({}, '', url.toString());
+    });
+
+    document.addEventListener('keydown', function onEsc(e) {
+        if (e.key === 'Escape') { chrome.remove(); document.removeEventListener('keydown', onEsc); }
+    });
+}
