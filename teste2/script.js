@@ -1,6 +1,16 @@
 (function(){
     var script = {
  "definitions": [{
+ "viewerArea": "this.MainViewer",
+ "buttonCardboardView": "this.IconButton_0F9A7943_0164_853A_4175_0649853E4CF9",
+ "displayPlaybackBar": true,
+ "class": "PanoramaPlayer",
+ "touchControlMode": "drag_rotation",
+ "id": "MainViewerPanoramaPlayer",
+ "gyroscopeVerticalDraggingEnabled": true,
+ "mouseControlMode": "drag_acceleration"
+},
+{
  "automaticZoomSpeed": 10,
  "initialSequence": {
   "restartMovementOnUserInteraction": false,
@@ -923,16 +933,6 @@
  "hfovMax": 130
 },
 {
- "viewerArea": "this.MainViewer",
- "buttonCardboardView": "this.IconButton_0C808051_0164_83D9_416F_06FAB485B440",
- "displayPlaybackBar": true,
- "class": "PanoramaPlayer",
- "touchControlMode": "drag_rotation",
- "id": "MainViewerPanoramaPlayer",
- "gyroscopeVerticalDraggingEnabled": true,
- "mouseControlMode": "drag_acceleration"
-},
-{
  "toolTipPaddingRight": 6,
  "toolTipBorderSize": 1,
  "id": "MainViewer",
@@ -1062,18 +1062,19 @@
  "backgroundOpacity": 0,
  "width": 42,
  "paddingRight": 0,
- "right": "2.35%",
+ "right": "9.29%",
  "paddingLeft": 0,
  "borderRadius": 0,
  "iconURL": "skin/IconButton_0C808051_0164_83D9_416F_06FAB485B440.png",
  "minHeight": 1,
  "propagateClick": false,
- "top": "3.42%",
+ "top": "2.21%",
  "borderSize": 0,
  "minWidth": 1,
  "mode": "push",
  "paddingBottom": 0,
  "class": "IconButton",
+ "click": "eval('var oldBox = document.getElementById(\"vrStartBox\");if (oldBox) oldBox.remove();var box = document.createElement(\"div\");box.id = \"vrStartBox\";box.style.position = \"fixed\";box.style.bottom = \"30px\";box.style.left = \"50%\";box.style.transform = \"translateX(-50%)\";box.style.zIndex = \"99999\";box.style.background = \"rgba(20,20,20,0.92)\";box.style.color = \"#fff\";box.style.padding = \"14px 18px\";box.style.borderRadius = \"16px\";box.style.boxShadow = \"0 10px 30px rgba(0,0,0,0.25)\";box.style.fontFamily = \"Arial, sans-serif\";box.style.textAlign = \"center\";var text = document.createElement(\"div\");text.innerHTML = \"Clique para entrar no modo VR\";text.style.marginBottom = \"10px\";text.style.fontSize = \"15px\";var btn = document.createElement(\"button\");btn.innerHTML = \"Entrar em VR\";btn.style.border = \"none\";btn.style.padding = \"10px 16px\";btn.style.borderRadius = \"12px\";btn.style.cursor = \"pointer\";btn.style.fontSize = \"14px\";btn.style.background = \"#ffffff\";btn.style.color = \"#111\";btn.onclick = function () {  // tenta achar um botão VR comum da interface  var candidates = Array.from(document.querySelectorAll(\"button, div, img, a\"));  var vrButton = candidates.find(function (el) {    var txt = (el.innerText || el.textContent || \"\").toLowerCase();    var aria = (el.getAttribute(\"aria-label\") || \"\").toLowerCase();    var title = (el.getAttribute(\"title\") || \"\").toLowerCase();    var cls = (el.className || \"\").toString().toLowerCase();    return (      txt.includes(\"vr\") ||      txt.includes(\"virtual reality\") ||      aria.includes(\"vr\") ||      title.includes(\"vr\") ||      cls.includes(\"vr\")    );  });  if (vrButton) {    vrButton.click();    box.remove();  } else {    alert(\"Não encontrei o botão VR da skin. Adicione o botão VR nativo do 3DVista e teste novamente.\");  }};box.appendChild(text);box.appendChild(btn);document.body.appendChild(box);');",
  "height": 42,
  "shadow": false,
  "paddingTop": 0,
@@ -1126,6 +1127,36 @@
   "name": "-button set"
  },
  "scrollBarWidth": 10
+},
+{
+ "transparencyActive": false,
+ "maxHeight": 55,
+ "id": "IconButton_0F9A7943_0164_853A_4175_0649853E4CF9",
+ "horizontalAlign": "center",
+ "backgroundOpacity": 0,
+ "width": 56,
+ "paddingRight": 0,
+ "right": "1.03%",
+ "paddingLeft": 0,
+ "borderRadius": 0,
+ "iconURL": "skin/IconButton_0F9A7943_0164_853A_4175_0649853E4CF9.png",
+ "minHeight": 1,
+ "propagateClick": false,
+ "top": "22.49%",
+ "borderSize": 0,
+ "minWidth": 1,
+ "mode": "push",
+ "paddingBottom": 0,
+ "class": "IconButton",
+ "height": 55,
+ "shadow": false,
+ "paddingTop": 0,
+ "data": {
+  "name": "IconButton8849"
+ },
+ "verticalAlign": "middle",
+ "cursor": "hand",
+ "maxWidth": 56
 },
 {
  "textDecoration": "none",
@@ -1182,11 +1213,12 @@
  },
  "shadowSpread": 1
 }],
- "start": "this.init(); this.visibleComponentsIfPlayerFlagEnabled([this.IconButton_0C808051_0164_83D9_416F_06FAB485B440], 'cardboardAvailable'); if(!this.get('fullscreenAvailable')) { [this.Button_0C9A99B8_016D_8557_4168_6C22137789D4].forEach(function(component) { component.set('visible', false); }) }",
+ "start": "this.init(); this.visibleComponentsIfPlayerFlagEnabled([this.IconButton_0C808051_0164_83D9_416F_06FAB485B440,this.IconButton_0F9A7943_0164_853A_4175_0649853E4CF9], 'cardboardAvailable'); if(!this.get('fullscreenAvailable')) { [this.Button_0C9A99B8_016D_8557_4168_6C22137789D4].forEach(function(component) { component.set('visible', false); }) }",
  "children": [
   "this.MainViewer",
   "this.IconButton_0C808051_0164_83D9_416F_06FAB485B440",
-  "this.Container_0C9D39B8_016D_8557_4167_CDDA767EA3E4"
+  "this.Container_0C9D39B8_016D_8557_4167_CDDA767EA3E4",
+  "this.IconButton_0F9A7943_0164_853A_4175_0649853E4CF9"
  ],
  "id": "rootPlayer",
  "scrollBarColor": "#000000",
