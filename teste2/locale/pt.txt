@@ -3,12 +3,13 @@
 ## Action
 
 ### URL
+PopupWebFrameBehaviour_1153B05B_0242_2C57_4160_9987A866CAE1.url = https://webtour-plum.vercel.app/form/index.html?step=quest1
 WebFrame_1783C07A_01AD_83CB_4164_5B15D2F0A059.url = https://webtour-plum.vercel.app/index.htm
 
 ## Hotspot
 
 ### URL
-FramePanoramaOverlay_1301967B_024E_3457_4177_FC1E6897ED81.url = https://webtour-plum.vercel.app/form/index.html?step=quest1
+overlay_12AEC9B8_0246_7CD1_417C_0ACCB62AB2E2.url = https://webtour-plum.vercel.app/form/index.html?step=quest1
 
 ## Media
 
