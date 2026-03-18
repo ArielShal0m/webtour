@@ -1,0 +1,25 @@
+#: locale=pt
+
+## Action
+
+### URL
+WebFrame_1783C07A_01AD_83CB_4164_5B15D2F0A059.url = https://webtour-plum.vercel.app/index.htm
+
+## Hotspot
+
+### URL
+FramePanoramaOverlay_1301967B_024E_3457_4177_FC1E6897ED81.url = https://webtour-plum.vercel.app/form/index.html?step=quest1
+
+## Media
+
+### Title
+panorama_F58E942E_FEF9_82B7_41E3_7F5C6D29DC5D.label = allphoto-bangkok-imSqK_PD5R0-unsplash.jpg
+panorama_F4BFE06A_FEF9_82BF_41EF_B86ECBEA5CA1.label = kris-guico-rsB-he-ye7w-unsplash.jpg
+panorama_F4A30805_FEF9_8275_41EA_7F3A20C3567E.label = timothy-oldfield-luufnHoChRU-unsplash.jpg
+
+## Tour
+
+### Description
+
+### Title
+tour.name = Sem Título 1
