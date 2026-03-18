@@ -376,6 +376,12 @@ window.addEventListener('message', onMessage);
 function installVRHotspotFix() {
     let vrActive = false;
 
+    // ── Overlay root para dom-overlay WebXR (renderiza sobre a cena VR no Quest) ──
+    const vrOverlayRoot = document.createElement('div');
+    vrOverlayRoot.id = 'vr-overlay-root';
+    vrOverlayRoot.style.cssText = 'position:fixed;inset:0;z-index:9999999;pointer-events:none;';
+    document.body.appendChild(vrOverlayRoot);
+
     // Rastrear estado VR do simulador
     window.addEventListener('vr-sim-started', () => { vrActive = true; });
     window.addEventListener('vr-sim-ended',   () => { vrActive = false; });
@@ -393,6 +399,14 @@ function installVRHotspotFix() {
         xr._hotspotHooked = true;
         const origRequest = xr.requestSession.bind(xr);
         xr.requestSession = function(mode, opts) {
+            // Adiciona dom-overlay como feature opcional para Quest renderizar iframes
+            if (mode && mode.includes('vr')) {
+                opts = Object.assign({}, opts);
+                const optFeat = Array.isArray(opts.optionalFeatures) ? opts.optionalFeatures.slice() : [];
+                if (!optFeat.includes('dom-overlay')) optFeat.push('dom-overlay');
+                opts.optionalFeatures = optFeat;
+                opts.domOverlay = { root: vrOverlayRoot };
+            }
             const p = origRequest(mode, opts);
             p.then(session => hookXRSession(session, mode)).catch(() => {});
             return p;
@@ -463,7 +477,7 @@ function installVRHotspotFix() {
             s.id = 'vr-popup-styles';
             s.textContent = `
                 #vr-hotspot-popup {
-                    position: fixed; inset: 0; z-index: 9999999;
+                    position: absolute; inset: 0;
                     background: rgba(0,0,0,.95);
                     display: flex; flex-direction: column;
                     font-family: Arial, Helvetica, sans-serif;
@@ -517,6 +531,7 @@ function installVRHotspotFix() {
 
         const popup = document.createElement('div');
         popup.id = POPUP_ID;
+        popup.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;background:rgba(0,0,0,.95);font-family:Arial,Helvetica,sans-serif;';
         popup.innerHTML = `
             <div class="vr-popup-bar">
                 <span class="vr-popup-url" title="${url}">${shortUrl}</span>
@@ -527,7 +542,8 @@ function installVRHotspotFix() {
                 id="vr-popup-iframe"
                 src="${url}"
                 sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation allow-modals"
-                allow="fullscreen; payment"
+                allow="fullscreen; payment; xr-spatial-tracking"
+                allowfullscreen
             ></iframe>
             <div id="vr-popup-blocked" style="display:none">
                 <div class="vr-blocked-icon">🔒</div>
@@ -536,7 +552,9 @@ function installVRHotspotFix() {
                 <button id="vr-popup-open-btn">↗ Abrir ${shortUrl} em nova aba</button>
             </div>
         `;
-        document.body.appendChild(popup);
+        // Coloca no vrOverlayRoot para renderizar corretamente via dom-overlay no Quest
+        vrOverlayRoot.style.pointerEvents = 'auto';
+        vrOverlayRoot.appendChild(popup);
 
         // Detectar se o iframe foi bloqueado (carregou mas sem conteúdo = erro de CSP/X-Frame-Options)
         const iframe = document.getElementById('vr-popup-iframe');
@@ -564,15 +582,20 @@ function installVRHotspotFix() {
             blockedMsg.style.display = 'flex';
         });
 
-        document.getElementById('vr-popup-back-btn').addEventListener('click', () => popup.remove());
+        function closePopup() {
+            popup.remove();
+            vrOverlayRoot.style.pointerEvents = 'none';
+        }
+
+        document.getElementById('vr-popup-back-btn').addEventListener('click', closePopup);
 
         document.getElementById('vr-popup-open-btn')?.addEventListener('click', () => {
             window.open(url, '_blank', 'noopener');
-            popup.remove();
+            closePopup();
         });
 
         const onEsc = (e) => {
-            if (e.key === 'Escape') { popup.remove(); document.removeEventListener('keydown', onEsc); }
+            if (e.key === 'Escape') { closePopup(); document.removeEventListener('keydown', onEsc); }
         };
         document.addEventListener('keydown', onEsc);
 
