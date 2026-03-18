@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "vite --open",
+    "dev:teste2": "vite --open /teste2/index.htm",
     "preview": "vite preview",
     "build:apk": "npx cap sync android && cd android && .\\gradlew.bat assembleDebug",
     "copy:apk": "copy android\\app\\build\\outputs\\apk\\debug\\app-debug.apk ..\\webtour.apk"
