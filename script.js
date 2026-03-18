@@ -404,28 +404,16 @@ function installVRHotspotFix() {
     setTimeout(hookXRSystem, 1500);
     setTimeout(hookXRSystem, 4000);
 
-    // ── Interceptar window.location.href ─────────────────────────────────────
-    // O tdvplayer.js em VR mode faz: window.location.href = url (linha ~3532)
-    // Isso causa tela preta. Interceptamos e mostramos um iframe overlay.
-    try {
-        const locProto = Object.getPrototypeOf(window.location);
-        const desc = Object.getOwnPropertyDescriptor(locProto, 'href');
-        if (desc && desc.set) {
-            Object.defineProperty(locProto, 'href', {
-                get() { return desc.get.call(this); },
-                set(url) {
-                    if (vrActive && isHotspotNavigation(url)) {
-                        showVRPopup(url);
-                    } else {
-                        desc.set.call(this, url);
-                    }
-                },
-                configurable: true
-            });
+    // ── Hook _vrOpenUrl: chamado pelo tdvplayer.js (linha 3532, modificada) ────
+    // O player foi alterado para chamar window._vrOpenUrl(url) em vez de
+    // window.location.href = url, permitindo que interceptemos aqui.
+    window._vrOpenUrl = function(url) {
+        if (vrActive && isHotspotNavigation(url)) {
+            showVRPopup(url);
+        } else {
+            window.location.href = url;
         }
-    } catch (e) {
-        console.warn('[VR Fix] Não foi possível interceptar location.href:', e);
-    }
+    };
 
     // ── Interceptar window.open ───────────────────────────────────────────────
     // Alguns hotspots "popup" usam window.open em vez de location.href
