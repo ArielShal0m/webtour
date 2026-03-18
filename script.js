@@ -404,11 +404,18 @@ function installVRHotspotFix() {
     setTimeout(hookXRSystem, 1500);
     setTimeout(hookXRSystem, 4000);
 
+    // ── Helper: detectar se VR está ativo (sessão real ou simulada por URL) ──
+    function isVRActive() {
+        if (vrActive) return true;
+        // Fallback: URL tem ?simulatevr=1 mesmo sem sessão XR iniciada
+        return /[?&]simulateVR=1/i.test(window.location.search);
+    }
+
     // ── Hook _vrOpenUrl: chamado pelo tdvplayer.js (linha 3532, modificada) ────
     // O player foi alterado para chamar window._vrOpenUrl(url) em vez de
     // window.location.href = url, permitindo que interceptemos aqui.
     window._vrOpenUrl = function(url) {
-        if (vrActive && isHotspotNavigation(url)) {
+        if (isVRActive() && isHotspotNavigation(url)) {
             showVRPopup(url);
         } else {
             window.location.href = url;
@@ -419,7 +426,7 @@ function installVRHotspotFix() {
     // Alguns hotspots "popup" usam window.open em vez de location.href
     const _origOpen = window.open;
     window.open = function(url, target, features) {
-        if (vrActive && url && isHotspotNavigation(url)) {
+        if (isVRActive() && url && isHotspotNavigation(url)) {
             showVRPopup(url);
             return null;
         }
@@ -478,9 +485,30 @@ function installVRHotspotFix() {
                     transition: background .15s;
                 }
                 #vr-popup-back-btn:hover { background: #3d3d3d; }
+                #vr-popup-newtab-btn {
+                    background: #1a3a6b; border: 1px solid #2a5aab; color: #7ab8ff;
+                    padding: 8px 18px; border-radius: 6px; cursor: pointer;
+                    font-size: 13px; white-space: nowrap; flex-shrink: 0;
+                    transition: background .15s; text-decoration: none;
+                }
+                #vr-popup-newtab-btn:hover { background: #1e4580; }
                 #vr-hotspot-popup iframe {
                     flex: 1; border: none; width: 100%; background: #fff;
                 }
+                #vr-popup-blocked {
+                    flex: 1; display: flex; flex-direction: column;
+                    align-items: center; justify-content: center; gap: 20px;
+                    color: #ccc; text-align: center; padding: 40px;
+                }
+                #vr-popup-blocked .vr-blocked-icon { font-size: 48px; }
+                #vr-popup-blocked h3 { margin: 0; color: #fff; font-size: 18px; }
+                #vr-popup-blocked p { margin: 0; color: #888; font-size: 14px; max-width: 400px; }
+                #vr-popup-open-btn {
+                    background: #1a3a6b; border: 1px solid #2a5aab; color: #7ab8ff;
+                    padding: 12px 28px; border-radius: 8px; cursor: pointer;
+                    font-size: 15px; transition: background .15s;
+                }
+                #vr-popup-open-btn:hover { background: #1e4580; }
             `;
             document.head.appendChild(s);
         }
@@ -492,17 +520,54 @@ function installVRHotspotFix() {
         popup.innerHTML = `
             <div class="vr-popup-bar">
                 <span class="vr-popup-url" title="${url}">${shortUrl}</span>
+                <a id="vr-popup-newtab-btn" href="${url}" target="_blank" rel="noopener">↗ Abrir em nova aba</a>
                 <button id="vr-popup-back-btn">← Voltar ao Tour</button>
             </div>
             <iframe
+                id="vr-popup-iframe"
                 src="${url}"
                 sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation allow-modals"
                 allow="fullscreen; payment"
             ></iframe>
+            <div id="vr-popup-blocked" style="display:none">
+                <div class="vr-blocked-icon">🔒</div>
+                <h3>Site não pode ser exibido aqui</h3>
+                <p>Este site bloqueou a exibição dentro de outros sites (X-Frame-Options). Abra-o em uma nova aba.</p>
+                <button id="vr-popup-open-btn">↗ Abrir ${shortUrl} em nova aba</button>
+            </div>
         `;
         document.body.appendChild(popup);
 
-        document.getElementById('vr-popup-back-btn').addEventListener('click', () => {
+        // Detectar se o iframe foi bloqueado (carregou mas sem conteúdo = erro de CSP/X-Frame-Options)
+        const iframe = document.getElementById('vr-popup-iframe');
+        const blockedMsg = document.getElementById('vr-popup-blocked');
+
+        // Timeout: se o iframe não carregar em 4s, assume bloqueio
+        let iframeLoaded = false;
+        iframe.addEventListener('load', () => {
+            iframeLoaded = true;
+            // Tenta detectar se o documento do iframe está vazio (bloqueio silencioso)
+            try {
+                const doc = iframe.contentDocument || iframe.contentWindow.document;
+                if (!doc || doc.body.innerHTML === '') {
+                    iframe.style.display = 'none';
+                    blockedMsg.style.display = 'flex';
+                }
+            } catch (e) {
+                // cross-origin: se lançar exceção o conteúdo carregou mas é cross-origin (ok)
+            }
+        });
+
+        // Erro explícito de carregamento
+        iframe.addEventListener('error', () => {
+            iframe.style.display = 'none';
+            blockedMsg.style.display = 'flex';
+        });
+
+        document.getElementById('vr-popup-back-btn').addEventListener('click', () => popup.remove());
+
+        document.getElementById('vr-popup-open-btn')?.addEventListener('click', () => {
+            window.open(url, '_blank', 'noopener');
             popup.remove();
         });
 
